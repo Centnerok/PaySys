@@ -10,9 +10,7 @@ import centnerok.paysys.exception.InsufficientFundsException;
 import centnerok.paysys.exception.InvalidDepositException;
 import centnerok.paysys.exception.InvalidTransferException;
 import centnerok.paysys.exception.ResourceNotFoundException;
-import centnerok.paysys.mapper.AccountMapper;
 import centnerok.paysys.mapper.TransactionMapper;
-import centnerok.paysys.model.dto.AccountResponse;
 import centnerok.paysys.model.dto.BalanceResponse;
 import centnerok.paysys.model.dto.DepositRequest;
 import centnerok.paysys.model.dto.TransactionResponse;
@@ -25,7 +23,6 @@ import centnerok.paysys.model.enums.TransactionType;
 import centnerok.paysys.repository.AccountRepository;
 import centnerok.paysys.repository.LedgerEntryRepository;
 import centnerok.paysys.repository.TransactionRepository;
-import centnerok.paysys.repository.UserRepository;
 import centnerok.paysys.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,42 +31,25 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
 
-    private final UserRepository userRepository;
-
     private final TransactionRepository transactionRepository;
 
     private final LedgerEntryRepository ledgerRepository;
-
-    private final AccountMapper accountMapper;
 
     private final TransactionMapper transactionMapper;
 
     public AccountServiceImpl(
         AccountRepository accountRepository, 
-        UserRepository userRepository,
         TransactionRepository transactionRepository,
         LedgerEntryRepository ledgerRepository,
-        AccountMapper accountMapper,
         TransactionMapper transactionMapper
     ) {
         this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
         this.ledgerRepository = ledgerRepository;
-        this.accountMapper = accountMapper;
         this.transactionMapper = transactionMapper;
     }
 
-    @Transactional 
-    @Override
-    public AccountResponse createAccount(Long userId) {
-        Account account = new Account();
-        account.setUser(userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id=" + userId + " not found")));
-        Account savedAccount = accountRepository.save(account);
-        log.info("Created account with id={} for user with id={}", savedAccount.getId(), userId);
-        return accountMapper.mapAccountToResponse(savedAccount);
-    }
+    
 
     @Transactional 
     @Override
