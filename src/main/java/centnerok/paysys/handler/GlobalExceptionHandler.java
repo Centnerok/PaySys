@@ -1,8 +1,11 @@
 package centnerok.paysys.handler;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -13,6 +16,7 @@ import centnerok.paysys.exception.InvalidDepositException;
 import centnerok.paysys.exception.InvalidTransferException;
 import centnerok.paysys.exception.ResourceNotFoundException;
 import centnerok.paysys.model.dto.ErrorResponse;
+import centnerok.paysys.model.dto.ValidationErrorsResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice 
@@ -52,5 +56,27 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleEmailAlreadyExists(EmailAlreadyExistsException e) {
         log.warn("Email already exists: {}", e.getMessage());
         return new ErrorResponse(e.getMessage(), Instant.now());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorsResponse handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        List<String> errors = e.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(
+                error ->
+                    error.getField() + ": " +
+                    error.getDefaultMessage()
+            )
+            .toList();
+        return new ValidationErrorsResponse(errors, Instant.now());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleOptimisticLocking(ObjectOptimisticLockingFailureException e) {
+        log.warn("Account was modified concurrently: {}", e.getMessage());
+        return new ErrorResponse("Account was modified concurrently", Instant.now());
     }
 }
