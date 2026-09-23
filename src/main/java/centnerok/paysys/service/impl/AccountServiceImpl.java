@@ -131,7 +131,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional 
     @Override
     public TransactionResponse makeDeposit(Long accountId, DepositRequest request) {
-        if (request.amount().compareTo(BigDecimal.ZERO) < 0) {
+        if (request.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidDepositException("Deposit amount must be greater than 0");
         }
 
